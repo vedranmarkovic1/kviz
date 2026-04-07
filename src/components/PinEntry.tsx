@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, Key } from 'lucide-react';
+import { Users, Key, LogIn } from 'lucide-react';
 
 interface PinEntryProps {
   onJoinQuiz: (quizId: string, playerName: string) => void;
+  onLogin: () => void;
 }
 
-export default function PinEntry({ onJoinQuiz }: PinEntryProps) {
+export default function PinEntry({ onJoinQuiz, onLogin }: PinEntryProps) {
   const [pin, setPin] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,7 +65,7 @@ export default function PinEntry({ onJoinQuiz }: PinEntryProps) {
     setLoading(true);
     try {
       // Create session for this player
-      const { data: sessionData, error: sessionError } = await supabase
+      const { error: sessionError } = await supabase
         .from('quiz_sessions')
         .insert({
           quiz_id: quizFound.id,
@@ -94,8 +95,20 @@ export default function PinEntry({ onJoinQuiz }: PinEntryProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-blue-600 to-blue-700 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-blue-600 to-blue-700 relative">
+      {/* Login button in top-right corner */}
+      <div className="absolute top-4 right-4">
+        <button
+          onClick={onLogin}
+          className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg"
+        >
+          <LogIn className="w-4 h-4" />
+          Login
+        </button>
+      </div>
+      
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-2xl p-8">
           <div className="flex justify-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
@@ -189,6 +202,7 @@ export default function PinEntry({ onJoinQuiz }: PinEntryProps) {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

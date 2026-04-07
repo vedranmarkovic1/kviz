@@ -20,8 +20,7 @@ type AppState =
   | { screen: 'results'; sessionId: string; totalScore: number };
 
 function App() {
-  const [state, setState] = useState<AppState>({ screen: 'dashboard' });
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [state, setState] = useState<AppState>({ screen: 'pinEntry' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,13 +28,11 @@ function App() {
     checkAuth();
     checkQuizLink();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        setIsAuthenticated(true);
         setState({ screen: 'dashboard' });
       } else {
-        setIsAuthenticated(false);
-        setState({ screen: 'login' });
+        setState({ screen: 'pinEntry' });
       }
     });
 
@@ -83,17 +80,14 @@ function App() {
       const { data: { session } } = await supabase.auth.getSession();
       console.log('Session:', session ? 'Found' : 'Not found');
       if (session) {
-        setIsAuthenticated(true);
         setState({ screen: 'dashboard' });
       } else {
-        setIsAuthenticated(false);
-        setState({ screen: 'login' });
+        setState({ screen: 'pinEntry' });
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
-      setError('Authentication check failed');
-      setIsAuthenticated(false);
-      setState({ screen: 'login' });
+      console.error('Error checking auth:', error);
+      setError('Greška pri proveri autentikacije');
+      setState({ screen: 'pinEntry' });
     } finally {
       setLoading(false);
     }
@@ -112,7 +106,6 @@ function App() {
   };
 
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
     setState({ screen: 'dashboard' });
   };
 
@@ -134,8 +127,7 @@ function App() {
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setState({ screen: 'login' });
+    setState({ screen: 'pinEntry' });
   };
 
   if (loading) {
@@ -173,7 +165,7 @@ function App() {
   }
 
   if (state.screen === 'pinEntry') {
-    return <PinEntry onJoinQuiz={handleJoinQuiz} />;
+    return <PinEntry onJoinQuiz={handleJoinQuiz} onLogin={() => setState({ screen: 'login' })} />;
   }
 
   if (state.screen === 'quizLobby') {
