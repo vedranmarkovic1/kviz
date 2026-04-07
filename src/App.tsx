@@ -23,6 +23,7 @@ function App() {
 
   useEffect(() => {
     checkAuth();
+    checkQuizLink();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
@@ -38,6 +39,25 @@ function App() {
       authListener?.subscription.unsubscribe();
     };
   }, []);
+
+  const checkQuizLink = () => {
+    const path = window.location.pathname;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    if (path.startsWith('/quiz/') && path.length > 6) {
+      const quizId = path.substring(6);
+      const sessionId = urlParams.get('session');
+      const isHost = urlParams.get('host') === 'true';
+      
+      if (isHost && sessionId) {
+        // Host mode - go to quiz with session
+        setState({ screen: 'quiz', quizId, playerName: 'Quiz Master' });
+      } else {
+        // Player mode - go to home to enter name
+        setState({ screen: 'home' });
+      }
+    }
+  };
 
   const checkAuth = async () => {
     try {

@@ -14,7 +14,16 @@ export default function Home({ onStartQuiz }: HomeProps) {
 
   useEffect(() => {
     loadQuizzes();
+    checkQuizLink();
   }, []);
+
+  const checkQuizLink = () => {
+    const path = window.location.pathname;
+    if (path.startsWith('/quiz/') && path.length > 6) {
+      const quizId = path.substring(6);
+      setSelectedQuiz(quizId);
+    }
+  };
 
   const loadQuizzes = async () => {
     try {
@@ -55,7 +64,9 @@ export default function Home({ onStartQuiz }: HomeProps) {
             <Trophy className="w-16 h-16 text-yellow-300 mr-4" />
             <h1 className="text-6xl font-bold text-white">QuizMaster</h1>
           </div>
-          <p className="text-xl text-blue-100">Testiraj svoje znanje kroz zabavne kvizove!</p>
+          <p className="text-xl text-blue-100">
+            {selectedQuiz ? 'Pozvan si na kviz!' : 'Testiraj svoje znanje kroz zabavne kvizove!'}
+          </p>
         </div>
 
         {quizzes.length === 0 ? (
@@ -67,7 +78,9 @@ export default function Home({ onStartQuiz }: HomeProps) {
         ) : (
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6">
-              <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Izaberi svoj kviz</h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+                {selectedQuiz ? 'Pozvani si na ovaj kviz:' : 'Izaberi svoj kviz'}
+              </h2>
 
               <div className="mb-6">
                 <input
@@ -80,7 +93,10 @@ export default function Home({ onStartQuiz }: HomeProps) {
               </div>
 
               <div className="grid gap-4 mb-6">
-                {quizzes.map((quiz) => (
+                {(selectedQuiz
+                  ? quizzes.filter((quiz) => quiz.id === selectedQuiz)
+                  : quizzes
+                ).map((quiz) => (
                   <button
                     key={quiz.id}
                     onClick={() => setSelectedQuiz(quiz.id)}
@@ -90,13 +106,9 @@ export default function Home({ onStartQuiz }: HomeProps) {
                         : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
                     }`}
                   >
-                    <h3 className="text-2xl font-bold text-gray-800 mb-2">{quiz.title}</h3>
-                    <p className="text-gray-600 mb-3">{quiz.description}</p>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
-                        Autor: {quiz.author}
-                      </span>
-                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{quiz.title}</h3>
+                    <p className="text-gray-600 mb-2">{quiz.description}</p>
+                    <p className="text-sm text-gray-500">Autor: {quiz.author}</p>
                   </button>
                 ))}
               </div>

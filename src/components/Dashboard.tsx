@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase, Quiz } from '../lib/supabase';
-import { Plus, LogOut, Settings, Trash2, CreditCard as Edit3 } from 'lucide-react';
+import { Plus, LogOut, Settings, Trash2, CreditCard as Edit3, Play } from 'lucide-react';
 import CreateQuizModal from './CreateQuizModal';
 import UserManagementModal from './UserManagementModal';
 
@@ -73,6 +73,29 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     } catch (error) {
       console.error('Error deleting quiz:', error);
       alert('Greška pri brisanju kviza');
+    }
+  };
+
+  const handleStartQuiz = async (quizId: string) => {
+    try {
+      // Create a new quiz session
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('quiz_sessions')
+        .insert({
+          quiz_id: quizId,
+          player_name: 'Quiz Master',
+          total_score: 0,
+        })
+        .select()
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      // Redirect to quiz with session ID
+      window.location.href = `/quiz/${quizId}?session=${sessionData.id}&host=true`;
+    } catch (error) {
+      console.error('Error starting quiz:', error);
+      alert('Greška pri startovanju kviza');
     }
   };
 
@@ -176,7 +199,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
-                          const quizLink = `${window.location.origin}?quiz=${quiz.id}`;
+                          const quizLink = `${window.location.origin}/quiz/${quiz.id}`;
                           navigator.clipboard.writeText(quizLink);
                           alert('Link kviza kopiran u clipboard');
                         }}
@@ -184,6 +207,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                       >
                         Podeli
                       </button>
+
+                      {(quiz.user_id === user?.id || user?.role === 'admin') && (
+                        <button
+                          onClick={() => handleStartQuiz(quiz.id)}
+                          className="flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
+                          title="Startuj kviz"
+                        >
+                          <Play className="w-4 h-4" />
+                        </button>
+                      )}
 
                       <button
                         onClick={() => {
