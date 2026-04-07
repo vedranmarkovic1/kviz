@@ -88,8 +88,8 @@ export default function Dashboard({ onLogout, onLogin, onNavigate }: DashboardPr
 
   const handleStartQuiz = async (quizId: string) => {
     try {
-      // Redirect to quiz lobby as host
-      window.location.href = `/lobby/${quizId}?host=true`;
+      // Navigate to quiz lobby as host with quizId
+      onNavigate(`quizLobby?quizId=${quizId}&host=true`);
     } catch (error) {
       console.error('Error starting quiz:', error);
       alert('Greška pri startovanju kviza');

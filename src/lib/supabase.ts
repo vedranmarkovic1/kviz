@@ -19,6 +19,8 @@ export type Quiz = {
   author: string;
   created_at: string;
   is_active: boolean;
+  pin_code?: string;
+  user_id?: string;
 };
 
 export type Question = {

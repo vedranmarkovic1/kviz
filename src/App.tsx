@@ -161,7 +161,18 @@ function App() {
   }
 
   if (state.screen === 'dashboard') {
-    return <Dashboard onLogout={handleLogout} onLogin={() => setState({ screen: 'login' })} onNavigate={(screen) => setState({ screen: screen as any })} />;
+    return <Dashboard onLogout={handleLogout} onLogin={() => setState({ screen: 'login' })} onNavigate={(screen) => {
+      if (screen.startsWith('quizLobby?')) {
+        const params = new URLSearchParams(screen.split('?')[1]);
+        const quizId = params.get('quizId');
+        const isHost = params.get('host') === 'true';
+        if (quizId) {
+          setState({ screen: 'quizLobby', quizId, playerName: 'Quiz Master', isHost });
+        }
+      } else {
+        setState({ screen: screen as any });
+      }
+    }} />;
   }
 
   if (state.screen === 'pinEntry') {
