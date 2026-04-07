@@ -33,48 +33,28 @@ BEGIN
   END IF;
 END $$;
 
--- Function to generate 6-digit PIN
-CREATE OR REPLACE FUNCTION generate_pin()
+-- Function to generate 6-digit PIN (only used when manually requested)
+CREATE OR REPLACE FUNCTION generate_6_digit_pin()
 RETURNS text
 LANGUAGE plpgsql
 AS $$
 DECLARE
-  pin text;
+  new_pin text;
   pin_exists boolean;
 BEGIN
   LOOP
-    pin := LPAD(floor(random() * 1000000)::text, 6, '0');
-    SELECT EXISTS(SELECT 1 FROM quizzes WHERE pin_code = pin) INTO pin_exists;
+    new_pin := LPAD(floor(random() * 1000000)::text, 6, '0');
+    SELECT EXISTS(SELECT 1 FROM quizzes WHERE pin_code = new_pin) INTO pin_exists;
     IF NOT pin_exists THEN
       EXIT;
     END IF;
   END LOOP;
-  RETURN pin;
+  RETURN new_pin;
 END;
 $$;
 
--- Trigger to auto-generate PIN when quiz is created
-CREATE OR REPLACE FUNCTION set_quiz_pin()
-RETURNS trigger
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  IF NEW.pin_code IS NULL OR NEW.pin_code = '' THEN
-    NEW.pin_code := generate_pin();
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
--- Create trigger
-DROP TRIGGER IF EXISTS quiz_pin_trigger ON quizzes;
-CREATE TRIGGER quiz_pin_trigger
-  BEFORE INSERT ON quizzes
-  FOR EACH ROW
-  EXECUTE FUNCTION set_quiz_pin();
-
--- Update existing quizzes to have PIN codes
-UPDATE quizzes SET pin_code = generate_pin() WHERE pin_code IS NULL OR pin_code = '';
+-- PIN codes will be generated only when Play button is clicked
+-- Existing quizzes without PIN will get one when first started
 
 -- Create index for PIN lookups
 CREATE INDEX IF NOT EXISTS idx_quizzes_pin_code ON quizzes(pin_code);

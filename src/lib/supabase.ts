@@ -19,6 +19,7 @@ export type Quiz = {
   author: string;
   created_at: string;
   is_active: boolean;
+  is_locked?: boolean;
   pin_code?: string;
   user_id?: string;
 };
@@ -27,8 +28,8 @@ export type Question = {
   id: string;
   quiz_id: string;
   question_text: string;
-  time_limit: number;
-  points: number;
+  time_limit?: number;
+  points?: number;
   order_number: number;
   created_at: string;
 };

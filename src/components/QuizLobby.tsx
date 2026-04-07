@@ -7,6 +7,7 @@ interface QuizLobbyProps {
   playerName: string;
   isHost: boolean;
   onQuizStart: (quizId: string, playerName: string) => void;
+  onAdminQuizStart: (quizId: string) => void;
 }
 
 interface Player {
@@ -15,7 +16,7 @@ interface Player {
   joined_at: string;
 }
 
-export default function QuizLobby({ quizId, playerName, isHost, onQuizStart }: QuizLobbyProps) {
+export default function QuizLobby({ quizId, playerName, isHost, onQuizStart, onAdminQuizStart }: QuizLobbyProps) {
   const [quiz, setQuiz] = useState<any>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,14 +81,23 @@ export default function QuizLobby({ quizId, playerName, isHost, onQuizStart }: Q
         .from('quiz_sessions')
         .select('*')
         .eq('quiz_id', quizId)
-        .eq('status', 'waiting')
-        .order('created_at', { ascending: true });
+        .eq('status', 'waiting');
 
       console.log('Players data:', playersData);
       console.log('Players error:', playersError);
 
       if (playersError) throw playersError;
-      setPlayers(playersData || []);
+      
+      // Sort manually if created_at doesn't exist
+      const sortedPlayers = playersData ? [...playersData].sort((a, b) => {
+        // Try to sort by created_at, fallback by id
+        if (a.created_at && b.created_at) {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        }
+        return a.id.localeCompare(b.id);
+      }) : [];
+      
+      setPlayers(sortedPlayers);
     } catch (error) {
       console.error('Error loading players:', error);
     }
@@ -113,9 +123,9 @@ export default function QuizLobby({ quizId, playerName, isHost, onQuizStart }: Q
 
       setQuizStarted(true);
       
-      // Start quiz for all players
+      // Start admin quiz view for host
       setTimeout(() => {
-        onQuizStart(quizId, playerName);
+        onAdminQuizStart(quizId);
       }, 1000);
     } catch (error) {
       console.error('Error starting quiz:', error);

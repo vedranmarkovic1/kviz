@@ -20,23 +20,20 @@ export default function PinEntry({ onJoinQuiz, onLogin }: PinEntryProps) {
     setLoading(true);
 
     try {
-      // Validate PIN format
-      if (pin.length !== 6 || !/^\d+$/.test(pin)) {
-        setError('PIN mora imati 6 cifara');
-        setLoading(false);
-        return;
-      }
-
-      // Find quiz by PIN
       const { data: quizData, error: quizError } = await supabase
         .from('quizzes')
         .select('*')
         .eq('pin_code', pin)
-        .eq('is_active', true)
         .single();
 
       if (quizError || !quizData) {
-        setError('Neispravan PIN kod');
+        setError('Kviz sa ovim PIN kodom nije pronađen');
+        setLoading(false);
+        return;
+      }
+
+      if (quizData.is_locked) {
+        setError('Ovaj kviz je zaključan. Kontaktirajte administratora.');
         setLoading(false);
         return;
       }

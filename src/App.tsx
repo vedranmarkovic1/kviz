@@ -8,6 +8,7 @@ import Results from './components/Results';
 import Dashboard from './components/Dashboard';
 import PinEntry from './components/PinEntry';
 import QuizLobby from './components/QuizLobby';
+import AdminQuizView from './components/AdminQuizView';
 
 type AppState =
   | { screen: 'login' }
@@ -17,6 +18,7 @@ type AppState =
   | { screen: 'pinEntry' }
   | { screen: 'quizLobby'; quizId: string; playerName: string; isHost: boolean }
   | { screen: 'quiz'; quizId: string; playerName: string }
+  | { screen: 'adminQuizView'; quizId: string }
   | { screen: 'results'; sessionId: string; totalScore: number };
 
 function App() {
@@ -126,6 +128,14 @@ function App() {
     setState({ screen: 'quiz', quizId, playerName });
   };
 
+  const handleAdminQuizStart = (quizId: string) => {
+    setState({ screen: 'adminQuizView', quizId });
+  };
+
+  const handleAdminQuizEnd = () => {
+    setState({ screen: 'dashboard' });
+  };
+
   const handleLogout = () => {
     setState({ screen: 'pinEntry' });
   };
@@ -186,6 +196,7 @@ function App() {
         playerName={state.playerName}
         isHost={state.isHost}
         onQuizStart={handleLobbyQuizStart}
+        onAdminQuizStart={handleAdminQuizStart}
       />
     );
   }
@@ -196,6 +207,15 @@ function App() {
         quizId={state.quizId}
         playerName={state.playerName}
         onComplete={handleQuizComplete}
+      />
+    );
+  }
+
+  if (state.screen === 'adminQuizView') {
+    return (
+      <AdminQuizView
+        quizId={state.quizId}
+        onQuizEnd={handleAdminQuizEnd}
       />
     );
   }
