@@ -20,7 +20,7 @@ type AppState =
   | { screen: 'results'; sessionId: string; totalScore: number };
 
 function App() {
-  const [state, setState] = useState<AppState>({ screen: 'pinEntry' });
+  const [state, setState] = useState<AppState>({ screen: 'dashboard' });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,7 +169,7 @@ function App() {
   }
 
   if (state.screen === 'dashboard') {
-    return <Dashboard onLogout={handleLogout} />;
+    return <Dashboard onLogout={handleLogout} onLogin={() => setState({ screen: 'login' })} onNavigate={(screen) => setState({ screen: screen as any })} />;
   }
 
   if (state.screen === 'pinEntry') {

@@ -8,8 +8,8 @@ interface LoginProps {
 }
 
 export default function Login({ onLoginSuccess, onSwitchToRegister }: LoginProps) {
-  const [email, setEmail] = useState('vedran.markovic@example.com');
-  const [password, setPassword] = useState('vedranvoliivu10');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

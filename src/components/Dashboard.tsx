@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase, Quiz } from '../lib/supabase';
-import { Plus, LogOut, Settings, Trash2, CreditCard as Edit3, Play } from 'lucide-react';
+import { Plus, LogOut, Settings, Trash2, CreditCard as Edit3, Play, Key } from 'lucide-react';
 import CreateQuizModal from './CreateQuizModal';
 import UserManagementModal from './UserManagementModal';
 
 interface DashboardProps {
   onLogout: () => void;
+  onLogin: () => void;
+  onNavigate: (screen: string) => void;
 }
 
 interface UserProfile {
@@ -15,7 +17,7 @@ interface UserProfile {
   role: string;
 }
 
-export default function Dashboard({ onLogout }: DashboardProps) {
+export default function Dashboard({ onLogout, onLogin, onNavigate }: DashboardProps) {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,15 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
-        onLogout();
+        // Load public quizzes for non-authenticated users
+        const { data: publicQuizzesData } = await supabase
+          .from('quizzes')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+
+        setQuizzes(publicQuizzesData || []);
+        setUser(null);
         return;
       }
 
@@ -105,56 +115,91 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-white">Dashboard</h1>
+              <h1 className="text-4xl font-bold text-white">QuizMaster</h1>
               <p className="text-blue-100 mt-2">
-                Dobrodošao, {user?.full_name || user?.username}
-                {user?.role === 'admin' && <span className="ml-2 text-xs bg-yellow-400 text-gray-800 px-3 py-1 rounded-full font-bold">ADMIN</span>}
+                {user ? (
+                  <>
+                    Dobrodošao, {user?.full_name || user?.username}
+                    {user?.role === 'admin' && <span className="ml-2 text-xs bg-yellow-400 text-gray-800 px-3 py-1 rounded-full font-bold">ADMIN</span>}
+                  </>
+                ) : (
+                  'Pristupite kvizovima ili se prijavite'
+                )}
               </p>
             </div>
 
             <div className="flex gap-3">
-              {user?.role === 'admin' && (
+              {user ? (
+                <>
+                  {user?.role === 'admin' && (
+                    <button
+                      onClick={() => setShowUserManagement(true)}
+                      className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                    >
+                      <Settings className="w-5 h-5" />
+                      Upravljanje korisnicima
+                    </button>
+                  )}
+
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Odjavi se
+                  </button>
+                </>
+              ) : (
                 <button
-                  onClick={() => setShowUserManagement(true)}
+                  onClick={onLogin}
                   className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
                 >
-                  <Settings className="w-5 h-5" />
-                  Upravljanje korisnicima
+                  <LogOut className="w-5 h-5 rotate-180" />
+                  Login
                 </button>
               )}
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
-              >
-                <LogOut className="w-5 h-5" />
-                Odjavi se
-              </button>
             </div>
           </div>
 
-          <div className="mb-8">
+          <div className="mb-8 flex gap-4">
             <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+              onClick={() => onNavigate('pinEntry')}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
             >
-              <Plus className="w-6 h-6" />
-              Kreiraj novi kviz
+              <Key className="w-6 h-6" />
+              Uđi u kviz sa PIN kodom
             </button>
+            
+            {user && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+              >
+                <Plus className="w-6 h-6" />
+                Kreiraj novi kviz
+              </button>
+            )}
           </div>
 
           {quizzes.length === 0 ? (
             <div className="bg-white rounded-3xl p-12 text-center shadow-2xl">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Nemaš kvizova</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                {user ? 'Nemaš kvizova' : 'Nema dostupnih kvizova'}
+              </h2>
               <p className="text-gray-600 mb-6">
-                Kreiraj svoj prvi kviz klikom na dugme iznad
+                {user 
+                  ? 'Kreiraj svoj prvi kviz klikom na dugme iznad'
+                  : 'Prijavite se da kreirate kvizove ili sačekajte da admini dodaju nove kvizove'
+                }
               </p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all"
-              >
-                Kreiraj kviz
-              </button>
+              {user && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all"
+                >
+                  Kreiraj kviz
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
