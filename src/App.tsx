@@ -6,17 +6,21 @@ import Home from './components/Home';
 import Quiz from './components/Quiz';
 import Results from './components/Results';
 import Dashboard from './components/Dashboard';
+import PinEntry from './components/PinEntry';
+import QuizLobby from './components/QuizLobby';
 
 type AppState =
   | { screen: 'login' }
   | { screen: 'register' }
   | { screen: 'home' }
   | { screen: 'dashboard' }
+  | { screen: 'pinEntry' }
+  | { screen: 'quizLobby'; quizId: string; playerName: string; isHost: boolean }
   | { screen: 'quiz'; quizId: string; playerName: string }
   | { screen: 'results'; sessionId: string; totalScore: number };
 
 function App() {
-  const [state, setState] = useState<AppState>({ screen: 'login' });
+  const [state, setState] = useState<AppState>({ screen: 'pinEntry' });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +48,21 @@ function App() {
     const path = window.location.pathname;
     const urlParams = new URLSearchParams(window.location.search);
     
-    if (path.startsWith('/quiz/') && path.length > 6) {
+    if (path.startsWith('/lobby/') && path.length > 7) {
+      const quizId = path.substring(7);
+      const isHost = urlParams.get('host') === 'true';
+      
+      // Go to quiz lobby
+      setState({ 
+        screen: 'quizLobby', 
+        quizId, 
+        playerName: isHost ? 'Quiz Master' : '', 
+        isHost 
+      });
+    } else if (path === '/pin' || path === '/') {
+      // Go to PIN entry
+      setState({ screen: 'pinEntry' });
+    } else if (path.startsWith('/quiz/') && path.length > 6) {
       const quizId = path.substring(6);
       const sessionId = urlParams.get('session');
       const isHost = urlParams.get('host') === 'true';
@@ -53,8 +71,8 @@ function App() {
         // Host mode - go to quiz with session
         setState({ screen: 'quiz', quizId, playerName: 'Quiz Master' });
       } else {
-        // Player mode - go to home to enter name
-        setState({ screen: 'home' });
+        // Player mode - go to PIN entry
+        setState({ screen: 'pinEntry' });
       }
     }
   };
@@ -102,6 +120,19 @@ function App() {
     setState({ screen: 'login' });
   };
 
+  const handleJoinQuiz = (quizId: string, playerName: string) => {
+    setState({ 
+      screen: 'quizLobby', 
+      quizId, 
+      playerName, 
+      isHost: false 
+    });
+  };
+
+  const handleLobbyQuizStart = (quizId: string, playerName: string) => {
+    setState({ screen: 'quiz', quizId, playerName });
+  };
+
   const handleLogout = () => {
     setIsAuthenticated(false);
     setState({ screen: 'login' });
@@ -139,6 +170,21 @@ function App() {
 
   if (state.screen === 'dashboard') {
     return <Dashboard onLogout={handleLogout} />;
+  }
+
+  if (state.screen === 'pinEntry') {
+    return <PinEntry onJoinQuiz={handleJoinQuiz} />;
+  }
+
+  if (state.screen === 'quizLobby') {
+    return (
+      <QuizLobby
+        quizId={state.quizId}
+        playerName={state.playerName}
+        isHost={state.isHost}
+        onQuizStart={handleLobbyQuizStart}
+      />
+    );
   }
 
   if (state.screen === 'quiz') {

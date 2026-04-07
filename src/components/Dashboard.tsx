@@ -78,21 +78,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
   const handleStartQuiz = async (quizId: string) => {
     try {
-      // Create a new quiz session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('quiz_sessions')
-        .insert({
-          quiz_id: quizId,
-          player_name: 'Quiz Master',
-          total_score: 0,
-        })
-        .select()
-        .single();
-
-      if (sessionError) throw sessionError;
-
-      // Redirect to quiz with session ID
-      window.location.href = `/quiz/${quizId}?session=${sessionData.id}&host=true`;
+      // Redirect to quiz lobby as host
+      window.location.href = `/lobby/${quizId}?host=true`;
     } catch (error) {
       console.error('Error starting quiz:', error);
       alert('Greška pri startovanju kviza');
@@ -191,21 +178,26 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                       {quiz.description || 'Nema opisa'}
                     </p>
 
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
-                      <span className="font-semibold">Autor:</span>
-                      <span>{quiz.author}</span>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                      <span className="font-semibold">Autor: {quiz.author}</span>
+                      {quiz.pin_code && (
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-mono font-bold">
+                          PIN: {quiz.pin_code}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
-                          const quizLink = `${window.location.origin}/quiz/${quiz.id}`;
-                          navigator.clipboard.writeText(quizLink);
-                          alert('Link kviza kopiran u clipboard');
+                          if (quiz.pin_code) {
+                            navigator.clipboard.writeText(quiz.pin_code);
+                            alert(`PIN kod ${quiz.pin_code} kopiran u clipboard!`);
+                          }
                         }}
                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
                       >
-                        Podeli
+                        Kopiraj PIN
                       </button>
 
                       {(quiz.user_id === user?.id || user?.role === 'admin') && (
