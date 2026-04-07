@@ -19,6 +19,7 @@ function App() {
   const [state, setState] = useState<AppState>({ screen: 'login' });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -40,7 +41,9 @@ function App() {
 
   const checkAuth = async () => {
     try {
+      console.log('Checking authentication...');
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session:', session ? 'Found' : 'Not found');
       if (session) {
         setIsAuthenticated(true);
         setState({ screen: 'dashboard' });
@@ -50,6 +53,7 @@ function App() {
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+      setError('Authentication check failed');
       setIsAuthenticated(false);
       setState({ screen: 'login' });
     } finally {
@@ -86,7 +90,11 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white mx-auto mb-4"></div>
+          <p className="text-white">Loading...</p>
+          {error && <p className="text-red-200 mt-2">{error}</p>}
+        </div>
       </div>
     );
   }

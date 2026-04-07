@@ -1,9 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = 'https://uycmdsckaiocfdujkzxa.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5Y21kc2NrYWlvY2ZkdWprenhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTY1MzMsImV4cCI6MjA5MDk3MjUzM30.a7wFc7Xy0cm1b3gnyx742i8NZY5m1bRRTYzvh4i-oR0';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Fallback to environment variables if available
+const finalSupabaseUrl = import.meta.env.VITE_SUPABASE_URL || supabaseUrl;
+const finalSupabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || supabaseAnonKey;
+
+console.log('Supabase URL:', finalSupabaseUrl);
+console.log('Supabase Key:', finalSupabaseAnonKey ? 'Present' : 'Missing');
+
+export const supabase = createClient(finalSupabaseUrl, finalSupabaseAnonKey);
 
 export type Quiz = {
   id: string;
