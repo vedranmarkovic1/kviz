@@ -41,8 +41,14 @@ export default function QuizLobby({ quizId, playerName, isHost, onQuizStart }: Q
       )
       .subscribe();
 
+    // Set up polling as fallback
+    const pollInterval = setInterval(() => {
+      loadPlayers();
+    }, 3000); // Poll every 3 seconds
+
     return () => {
       subscription.unsubscribe();
+      clearInterval(pollInterval);
     };
   }, [quizId]);
 
@@ -69,12 +75,16 @@ export default function QuizLobby({ quizId, playerName, isHost, onQuizStart }: Q
 
   const loadPlayers = async () => {
     try {
+      console.log('Loading players for quiz:', quizId);
       const { data: playersData, error: playersError } = await supabase
         .from('quiz_sessions')
         .select('*')
         .eq('quiz_id', quizId)
         .eq('status', 'waiting')
         .order('created_at', { ascending: true });
+
+      console.log('Players data:', playersData);
+      console.log('Players error:', playersError);
 
       if (playersError) throw playersError;
       setPlayers(playersData || []);
